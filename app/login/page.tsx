@@ -39,7 +39,7 @@ export default function LoginPage() {
         {/* Logo area */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 48, marginBottom: 8 }}>🌾</div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#15803d', margin: 0 }}>Iglesias Dairy</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#15803d', margin: 0 }}>PR Greens</h1>
           <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>Farm Management System</p>
           <span style={{
             display: 'inline-block',
@@ -62,7 +62,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@iglesiasdairy.com"
+              placeholder="you@prgreens.com"
               required
               autoComplete="email"
             />
@@ -116,7 +116,7 @@ export default function LoginPage() {
 
         <div style={{ marginTop: 16, padding: 12, background: '#f9fafb', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12, color: '#6b7280' }}>
           <p style={{ fontWeight: 600, color: '#4b5563', marginBottom: 4 }}>Demo accounts:</p>
-          <p>Manager: <span style={{ fontFamily: 'monospace' }}>jorge@iglesiasdairy.com</span> / <span style={{ fontFamily: 'monospace' }}>IglesiasDairy2026!</span></p>
+          <p style={{ margin: 0 }}>Manager: <span style={{ fontFamily: 'monospace' }}>jorge@prgreens.com</span> / <span style={{ fontFamily: 'monospace' }}>PRGreens2026!</span></p>
         </div>
       </div>
     </div>

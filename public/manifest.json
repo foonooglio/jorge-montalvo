@@ -1,7 +1,7 @@
 {
-  "name": "Iglesias Dairy Farm Manager",
-  "short_name": "Iglesias Dairy",
-  "description": "Farm management for Iglesias Dairy",
+  "name": "PR Greens Farm Manager",
+  "short_name": "PR Greens",
+  "description": "Farm management for Puerto Rico Greens LLC",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",

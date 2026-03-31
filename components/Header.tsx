@@ -30,7 +30,7 @@ export default function Header() {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ fontSize: 22 }}>🌾</span>
-        <span style={{ fontWeight: 700, fontSize: 17 }}>Iglesias Dairy</span>
+        <span style={{ fontWeight: 700, fontSize: 17 }}>PR Greens</span>
         <span style={{
           backgroundColor: '#ffffff',
           color: '#15803d',

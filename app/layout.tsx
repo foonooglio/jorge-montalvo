@@ -6,13 +6,13 @@ import AuthGuard from '@/components/AuthGuard'
 import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar'
 
 export const metadata: Metadata = {
-  title: 'Iglesias Dairy — Farm Manager',
-  description: 'Farm management for Iglesias Dairy',
+  title: 'PR Greens — Farm Manager',
+  description: 'Farm management for Puerto Rico Greens LLC',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Iglesias Dairy',
+    title: 'PR Greens',
   },
 }
 

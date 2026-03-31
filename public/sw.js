@@ -1,5 +1,5 @@
-const CACHE_NAME = 'iglesias-farm-v1';
-const HTML_CACHE = 'iglesias-html-v1';
+const CACHE_NAME = 'pr-greens-v1';
+const HTML_CACHE = 'pr-greens-html-v1';
 
 const STATIC_ASSETS = [
   '/manifest.json',

@@ -4,25 +4,19 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
-interface Farm { id: string; name: string }
+interface Farm { id: string; name: string; location: string }
 interface Employee { id: string; name: string; farm_id: string }
 interface Task {
   id: string
   title: string
-  status: 'todo' | 'in_progress' | 'done'
+  status: string
   date: string
-  employee_id: string
+  assigned_to: string
   farm_id: string
   notes?: string
-  employees?: { name: string }
-  farm_locations?: { name: string }
+  prg_employees?: { name: string }
+  prg_farms?: { name: string }
 }
-
-const COLUMNS = [
-  { key: 'todo', label: 'Todo', color: '#e5e7eb', textColor: '#374151' },
-  { key: 'in_progress', label: 'In Progress', color: '#fef3c7', textColor: '#92400e' },
-  { key: 'done', label: 'Done', color: '#d1fae5', textColor: '#065f46' },
-]
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -32,32 +26,20 @@ export default function DashboardPage() {
   const [selectedFarm, setSelectedFarm] = useState('')
   const [loading, setLoading] = useState(true)
   const [addingTask, setAddingTask] = useState(false)
-  const [newTask, setNewTask] = useState({ title: '', employee_id: '', farm_id: '', notes: '' })
+  const [newTask, setNewTask] = useState({ title: '', assigned_to: '', farm_id: '', notes: '' })
 
   const loadData = useCallback(async () => {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.replace('/login'); return }
 
-    // Check role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, org_id')
-      .eq('id', user.id)
-      .single()
-
-    if (profile?.role === 'worker') {
-      router.replace('/dashboard/worker')
-      return
-    }
-
     const today = new Date().toISOString().split('T')[0]
 
     const [farmsRes, empsRes, tasksRes] = await Promise.all([
-      supabase.from('farm_locations').select('id, name').order('name'),
-      supabase.from('employees').select('id, name, farm_id').order('name'),
-      supabase.from('daily_tasks')
-        .select('*, employees(name), farm_locations(name)')
+      supabase.from('prg_farms').select('id, name, location').order('name'),
+      supabase.from('prg_employees').select('id, name, farm_id').order('name'),
+      supabase.from('prg_tasks')
+        .select('*, prg_employees(name), prg_farms(name)')
         .eq('date', today)
         .order('created_at'),
     ])
@@ -76,36 +58,42 @@ export default function DashboardPage() {
     ? tasks.filter((t) => t.farm_id === selectedFarm)
     : tasks
 
-  const tasksByStatus = (status: string) => filteredTasks.filter((t) => t.status === status)
-
-  const totalEmployees = employees.length
   const tasksDone = tasks.filter((t) => t.status === 'done').length
-  const tasksPending = tasks.filter((t) => t.status !== 'done').length
+  const tasksTotal = tasks.length
 
-  const advanceStatus = async (task: Task) => {
-    const next = task.status === 'todo' ? 'in_progress' : task.status === 'in_progress' ? 'done' : 'done'
+  // Per-farm summary
+  const farmSummary = farms.map((farm) => {
+    const farmEmps = employees.filter((e) => e.farm_id === farm.id).length
+    const farmTasks = tasks.filter((t) => t.farm_id === farm.id)
+    const done = farmTasks.filter((t) => t.status === 'done').length
+    return { ...farm, empCount: farmEmps, done, total: farmTasks.length }
+  })
+
+  const toggleTask = async (task: Task) => {
+    const next = task.status === 'done' ? 'pending' : 'done'
     const supabase = createClient()
-    await supabase.from('daily_tasks').update({ status: next }).eq('id', task.id)
-    setTasks((prev) => prev.map((t) => t.id === task.id ? { ...t, status: next as Task['status'] } : t))
+    await supabase.from('prg_tasks').update({ status: next }).eq('id', task.id)
+    setTasks((prev) => prev.map((t) => t.id === task.id ? { ...t, status: next } : t))
   }
 
   const addTask = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newTask.title || !newTask.employee_id || !newTask.farm_id) return
+    if (!newTask.title || !newTask.assigned_to || !newTask.farm_id) return
     setAddingTask(true)
     const supabase = createClient()
-    const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', (await supabase.auth.getUser()).data.user!.id).single()
-    const { data } = await supabase.from('daily_tasks').insert({
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user!.id).single()
+    const { data } = await supabase.from('prg_tasks').insert({
       org_id: profile!.org_id,
       title: newTask.title,
-      employee_id: newTask.employee_id,
+      assigned_to: newTask.assigned_to,
       farm_id: newTask.farm_id,
-      notes: newTask.notes,
+      notes: newTask.notes || null,
       date: today,
-      status: 'todo',
-    }).select('*, employees(name), farm_locations(name)').single()
+      status: 'pending',
+    }).select('*, prg_employees(name), prg_farms(name)').single()
     if (data) setTasks((prev) => [...prev, data])
-    setNewTask({ title: '', employee_id: '', farm_id: '', notes: '' })
+    setNewTask({ title: '', assigned_to: '', farm_id: '', notes: '' })
     setAddingTask(false)
   }
 
@@ -119,95 +107,94 @@ export default function DashboardPage() {
 
   return (
     <div style={{ padding: '16px', backgroundColor: '#f9fafb', minHeight: '100%' }}>
-      {/* Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+
+      {/* Summary stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
         <div style={cardStyle}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#15803d' }}>{totalEmployees}</div>
-          <div style={{ fontSize: 11, color: '#6b7280' }}>Employees</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#15803d' }}>{employees.length}</div>
+          <div style={{ fontSize: 11, color: '#6b7280' }}>Workers</div>
         </div>
         <div style={cardStyle}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#059669' }}>{tasksDone}</div>
-          <div style={{ fontSize: 11, color: '#6b7280' }}>Done</div>
-        </div>
-        <div style={cardStyle}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#d97706' }}>{tasksPending}</div>
-          <div style={{ fontSize: 11, color: '#6b7280' }}>Pending</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#059669' }}>{tasksDone}/{tasksTotal}</div>
+          <div style={{ fontSize: 11, color: '#6b7280' }}>Tasks Done Today</div>
         </div>
       </div>
 
-      {/* Farm filter */}
-      <div style={{ marginBottom: 16 }}>
+      {/* Farm cards */}
+      <h3 style={{ fontSize: 14, fontWeight: 700, color: '#374151', margin: '0 0 10px' }}>🏡 Farms</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+        {farmSummary.map((farm) => (
+          <div key={farm.id} style={{
+            backgroundColor: '#ffffff',
+            border: '1px solid #e5e7eb',
+            borderRadius: 8,
+            padding: '12px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>{farm.name}</div>
+              <div style={{ fontSize: 12, color: '#6b7280' }}>{farm.location}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 13, color: '#374151' }}>👤 {farm.empCount} workers</div>
+              <div style={{ fontSize: 12, color: '#059669' }}>✅ {farm.done}/{farm.total} tasks</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Task list with filter */}
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: '#374151', margin: 0 }}>📋 Today&apos;s Tasks</h3>
+        </div>
         <select
           value={selectedFarm}
           onChange={(e) => setSelectedFarm(e.target.value)}
-          style={{ marginBottom: 0 }}
+          style={{ marginBottom: 10 }}
         >
           <option value="">All Farms</option>
           {farms.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
         </select>
-      </div>
 
-      {/* Kanban */}
-      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', marginBottom: 20 }}>
-        {COLUMNS.map((col) => (
-          <div key={col.key} style={{
-            flex: '0 0 150px',
-            minWidth: 150,
-          }}>
-            <div style={{
-              backgroundColor: col.color,
-              color: col.textColor,
-              padding: '6px 10px',
-              borderRadius: '6px 6px 0 0',
-              fontSize: 12,
-              fontWeight: 700,
-              textAlign: 'center',
-            }}>
-              {col.label} ({tasksByStatus(col.key).length})
-            </div>
-            <div style={{
-              backgroundColor: '#ffffff',
-              border: '1px solid #e5e7eb',
-              borderTop: 'none',
-              borderRadius: '0 0 6px 6px',
-              padding: 8,
-              minHeight: 100,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-            }}>
-              {tasksByStatus(col.key).map((task) => (
-                <div
-                  key={task.id}
-                  onClick={() => advanceStatus(task)}
-                  style={{
-                    backgroundColor: col.key === 'done' ? '#f0fdf4' : '#f9fafb',
-                    border: '1px solid ' + col.color,
-                    borderRadius: 6,
-                    padding: '8px 10px',
-                    cursor: task.status !== 'done' ? 'pointer' : 'default',
-                    transition: 'transform 0.1s',
-                  }}
-                >
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#111827', marginBottom: 4 }}>
-                    {task.title}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#6b7280' }}>
-                    👤 {(task.employees as { name: string } | undefined)?.name || 'Unknown'}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#6b7280' }}>
-                    🏡 {(task.farm_locations as { name: string } | undefined)?.name || '—'}
-                  </div>
-                  {task.status !== 'done' && (
-                    <div style={{ fontSize: 10, color: '#15803d', marginTop: 4, fontStyle: 'italic' }}>
-                      Tap to advance →
-                    </div>
-                  )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+          {filteredTasks.length === 0 && (
+            <p style={{ color: '#9ca3af', fontSize: 13, textAlign: 'center', padding: 16 }}>No tasks for today yet.</p>
+          )}
+          {filteredTasks.map((task) => (
+            <div
+              key={task.id}
+              onClick={() => toggleTask(task)}
+              style={{
+                backgroundColor: task.status === 'done' ? '#f0fdf4' : '#ffffff',
+                border: `1px solid ${task.status === 'done' ? '#a7f3d0' : '#e5e7eb'}`,
+                borderRadius: 8,
+                padding: '10px 12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 10,
+              }}
+            >
+              <span style={{ fontSize: 18, marginTop: 1 }}>{task.status === 'done' ? '✅' : '⬜'}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: task.status === 'done' ? '#6b7280' : '#111827',
+                  textDecoration: task.status === 'done' ? 'line-through' : 'none',
+                }}>
+                  {task.title}
                 </div>
-              ))}
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                  👤 {(task.prg_employees as { name: string } | undefined)?.name || '—'} &nbsp;·&nbsp; 🏡 {(task.prg_farms as { name: string } | undefined)?.name || '—'}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Add task */}
@@ -222,18 +209,18 @@ export default function DashboardPage() {
           />
           <select
             value={newTask.farm_id}
-            onChange={(e) => setNewTask({ ...newTask, farm_id: e.target.value, employee_id: '' })}
+            onChange={(e) => setNewTask({ ...newTask, farm_id: e.target.value, assigned_to: '' })}
             required
           >
             <option value="">Select farm</option>
             {farms.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
           </select>
           <select
-            value={newTask.employee_id}
-            onChange={(e) => setNewTask({ ...newTask, employee_id: e.target.value })}
+            value={newTask.assigned_to}
+            onChange={(e) => setNewTask({ ...newTask, assigned_to: e.target.value })}
             required
           >
-            <option value="">Assign to employee</option>
+            <option value="">Assign to worker</option>
             {filteredEmployees.map((emp) => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
           </select>
           <input
