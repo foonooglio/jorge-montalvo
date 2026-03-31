@@ -1,26 +1,60 @@
 @import "tailwindcss";
 
 :root {
+  --primary: #15803d;
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #111827;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
+html, body {
+  background-color: #ffffff !important;
+  color: #111827;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+input, select, textarea {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 16px;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid #15803d;
+  outline-offset: 0;
+  border-color: #15803d;
+}
+
+button {
+  cursor: pointer;
+  font-size: 14px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Force light mode — no dark mode ever */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html, body {
+    background-color: #ffffff !important;
+    color: #111827 !important;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  input, select, textarea {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+  }
 }
