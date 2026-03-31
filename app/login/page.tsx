@@ -114,9 +114,10 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', marginTop: 24 }}>
-          Demo: jorge@iglesiasdairy.com / IglesiasDairy2026!
-        </p>
+        <div style={{ marginTop: 16, padding: 12, background: '#f9fafb', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12, color: '#6b7280' }}>
+          <p style={{ fontWeight: 600, color: '#4b5563', marginBottom: 4 }}>Demo accounts:</p>
+          <p>Manager: <span style={{ fontFamily: 'monospace' }}>jorge@iglesiasdairy.com</span> / <span style={{ fontFamily: 'monospace' }}>IglesiasDairy2026!</span></p>
+        </div>
       </div>
     </div>
   )
