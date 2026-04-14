@@ -29,7 +29,7 @@ export default function Header() {
       maxWidth: '100%',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 22 }}>🌾</span>
+        <span style={{ fontSize: 22 }}>🌱</span>
         <span style={{ fontWeight: 700, fontSize: 17 }}>PR Greens</span>
         <span style={{
           backgroundColor: '#ffffff',

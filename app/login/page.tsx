@@ -6,8 +6,8 @@ import { createClient } from '@/lib/supabase'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('jorge@prgreens.com')
+  const [password, setPassword] = useState('PRGreens2026!')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -38,9 +38,9 @@ export default function LoginPage() {
       <div style={{ width: '100%', maxWidth: 400 }}>
         {/* Logo area */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 48, marginBottom: 8 }}>🌾</div>
+          <div style={{ fontSize: 48, marginBottom: 8 }}>🌱</div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#15803d', margin: 0 }}>PR Greens</h1>
-          <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>Farm Management System</p>
+          <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>Farm Operations Manager</p>
           <span style={{
             display: 'inline-block',
             backgroundColor: '#15803d',
@@ -115,8 +115,9 @@ export default function LoginPage() {
         </form>
 
         <div style={{ marginTop: 16, padding: 12, background: '#f9fafb', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12, color: '#6b7280' }}>
-          <p style={{ fontWeight: 600, color: '#4b5563', marginBottom: 4 }}>Demo accounts:</p>
-          <p style={{ margin: 0 }}>Manager: <span style={{ fontFamily: 'monospace' }}>jorge@prgreens.com</span> / <span style={{ fontFamily: 'monospace' }}>PRGreens2026!</span></p>
+          <p style={{ fontWeight: 600, color: '#4b5563', marginBottom: 4 }}>Demo credentials:</p>
+          <p style={{ margin: '4px 0', fontSize: 11 }}>Email: <span style={{ fontFamily: 'monospace', color: '#374151' }}>jorge@prgreens.com</span></p>
+          <p style={{ margin: '4px 0', fontSize: 11 }}>Password: <span style={{ fontFamily: 'monospace', color: '#374151' }}>PRGreens2026!</span></p>
         </div>
       </div>
     </div>

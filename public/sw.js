@@ -1,5 +1,5 @@
-const CACHE_NAME = 'pr-greens-v1';
-const HTML_CACHE = 'pr-greens-html-v1';
+const CACHE_NAME = 'pr-greens-v2';
+const HTML_CACHE = 'pr-greens-html-v2';
 
 const STATIC_ASSETS = [
   '/manifest.json',
